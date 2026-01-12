@@ -1,6 +1,16 @@
 """
-Entites: table
-its purpose is to own the actual data, enforce schema + indexes
+Entity: Table
+
+Purpose:
+- Owns actual row data
+- Enforces schema constraints
+- Maintains and updates indexes
+- Provides basic data operations (insert, select, update, delete)
+
+Design philosophy:
+- Simplicity over optimization
+- Correctness over performance
+- Explicit state management
 """
 
 from .schema import Schema
@@ -11,93 +21,124 @@ class Table:
     def __init__(self, name: str, schema: Schema):
         self.name = name
         self.schema = schema
-        self.rows = []
-        self.indexes = {}
+        self.rows: list[dict] = []
+        self.indexes: dict[str, Index] = {}
 
-        # Create indexes for PK and unique columns
-        for col in schema.columns:
-            if col.primary_key or col.unique:
-                self.indexes[col.name] = Index(
-                    column=col.name,
+        # Automatically create indexes for primary key and unique columns
+        for column in schema.columns:
+            if column.primary_key or column.unique:
+                self.indexes[column.name] = Index(
+                    column=column.name,
                     unique=True
                 )
 
+    # -------------------------
+    # INSERT
+    
     def insert(self, row: dict):
+        """
+        Insert a new row into the table after schema validation
+        and index constraint enforcement.
+        """
         self.schema.validate_row(row)
 
         row_id = len(self.rows)
 
-        # Enforce indexes
-        for col_name, index in self.indexes.items():
-            index.insert(row.get(col_name), row_id)
+        # Enforce index constraints
+        for column_name, index in self.indexes.items():
+            index.insert(row.get(column_name), row_id)
 
         self.rows.append(row)
 
+    # -------------------------
+    # SELECT
+   
     def select_all(self):
+        """Return all rows in the table."""
         return self.rows
 
-    # Index aware selection
-    def _row_matches(self, row_id: int, Predicate):
-        row = self.rows[row_id]
-        return Predicate.evaluate(row)
-
     def select_where(self, predicate, use_index: bool = True):
-    # Try index-based path
-     if use_index and hasattr(predicate, "column") and predicate.column in self.indexes:
-        index = self.indexes[predicate.column]
-        row_ids = index.lookup(predicate.value)
-        return [self.rows[rid] for rid in row_ids if predicate.evaluate(self.rows[rid])]
+        """
+        Select rows matching a predicate.
+        Uses index-based lookup when possible, otherwise falls back to full scan.
+        """
+        # Index-aware execution path
+        if (
+            use_index
+            and hasattr(predicate, "column")
+            and predicate.column in self.indexes
+        ):
+            index = self.indexes[predicate.column]
+            row_ids = index.lookup(predicate.value)
+            return [
+                self.rows[row_id]
+                for row_id in row_ids
+                if predicate.evaluate(self.rows[row_id])
+            ]
 
-    # Fallback: full table scan
-     return [row for row in self.rows if predicate.evaluate(row)]
+        # Full table scan fallback
+        return [row for row in self.rows if predicate.evaluate(row)]
 
-    # Update operation
-    def update_where(self, predicate, updates: dict):
+    # -------------------------
+    # UPDATE
+   
+    def update_where(self, predicate, updates: dict) -> int:
+        """
+        Update rows matching a predicate.
+        Returns the number of updated rows.
+        """
         updated = 0
 
         for row_id, row in enumerate(self.rows):
-            if predicate.evaluate(row):
-               # Remove old index entries
-               for col, index in self.indexes.items():
-                   index.delete(row.get(col), row_id)
+            if not predicate.evaluate(row):
+                continue
 
-               # Apply updates
-               for key, value in updates.items():
-                   row[key] = value
+            # Remove old index entries
+            for column, index in self.indexes.items():
+                index.delete(row.get(column), row_id)
 
-               # Validate updated row
-               self.schema.validate_row(row)
+            # Apply updates
+            for key, value in updates.items():
+                row[key] = value
 
-               # Reinsert into indexes
-               for col, index in self.indexes.items():
-                   index.insert(row.get(col), row_id)
+            # Re-validate row after mutation
+            self.schema.validate_row(row)
 
-               updated += 1
+            # Reinsert into indexes
+            for column, index in self.indexes.items():
+                index.insert(row.get(column), row_id)
 
-    return updated
+            updated += 1
 
-    # Delete operation
-    def delete_where(self, predicate):
+        return updated
+
+    # -------------------------
+    # DELETE
+    
+    def delete_where(self, predicate) -> int:
+        """
+        Delete rows matching a predicate.
+        Rebuilds storage and indexes.
+        Returns the number of deleted rows.
+        """
         deleted = 0
-
         new_rows = []
-        old_to_new_ids = {}
 
-        for old_id, row in enumerate(self.rows):
+        for row in self.rows:
             if predicate.evaluate(row):
-               deleted += 1
-               continue
-            new_id = len(new_rows)
-            new_rows.append(row)
-            old_to_new_ids[old_id] = new_id
+                deleted += 1
+            else:
+                new_rows.append(row)
 
-    # Rebuild indexes
+        # Replace rows
         self.rows = new_rows
+
+        # Rebuild indexes from scratch
         for index in self.indexes.values():
             index.map.clear()
 
         for row_id, row in enumerate(self.rows):
-            for col, index in self.indexes.items():
-                index.insert(row.get(col), row_id)
+            for column, index in self.indexes.items():
+                index.insert(row.get(column), row_id)
 
-    return deleted
+        return deleted
