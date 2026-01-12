@@ -16,4 +16,22 @@
 - WHERE filtering
 - JOIN support
 
+## Filtering
+
+Filtering supports:
+- index-based lookup when possible
+- full scan fallback otherwise
+
+## Deletion Strategy
+
+Rows are physically removed and indexes rebuilt.
+
+Rationale:
+- Simplicity
+- Correctness
+- No tombstones or fragmentation
+
+Trade-off: O(n) delete cost (acceptable for scope).
+This mirrors real DB execution strategies at a small scale.
 Table is intentionally minimal at this stage.
+
