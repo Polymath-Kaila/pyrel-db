@@ -1,3 +1,6 @@
+import sys
+sys.path.append(".")
+
 from pyrel.storage.schema import Column, Schema
 from pyrel.storage.database import Database
 
