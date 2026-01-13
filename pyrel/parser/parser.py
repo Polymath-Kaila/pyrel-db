@@ -71,11 +71,20 @@ def _parse_where(tokens):
     return col, val
 
 def _parse_select(tokens):
-    table_name = tokens[3]
+    # SELECT col1,col2 FROM table ...
+    select_part = tokens[1]
+    columns = None if select_part == "*" else [
+        c.strip() for c in select_part.split(",")
+    ]
+
+    table_name = tokens[tokens.index("FROM") + 1]
+
     where = None
     if "WHERE" in tokens:
         where = _parse_where(tokens)
-    return Select(table_name, where)
+
+    return Select(table_name, columns, where)
+
 
 def _parse_update(tokens, sql):
     table_name = tokens[1]
@@ -95,19 +104,24 @@ def _parse_delete(tokens):
     return Delete(table_name, where)
 
 def _parse_join(tokens):
-    left_table = tokens[3]
-    right_table = tokens[5]
+    select_part = tokens[1]
+    columns = None if select_part == "*" else [
+        c.strip() for c in select_part.split(",")
+    ]
+
+    left_table = tokens[tokens.index("FROM") + 1]
+    right_table = tokens[tokens.index("JOIN") + 1]
 
     on_index = tokens.index("ON")
-    condition = tokens[on_index + 1]
-
-    left_key, right_key = condition.split("=")
+    left_key, right_key = tokens[on_index + 1].split("=")
 
     return JoinSelect(
         table_name=left_table,
+        columns=columns,
         join={
             "table": right_table,
             "left_key": left_key,
             "right_key": right_key,
         },
     )
+

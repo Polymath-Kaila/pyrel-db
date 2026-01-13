@@ -16,9 +16,11 @@ class Insert(Statement):
 
 
 class Select(Statement):
-    def __init__(self, table_name, where=None):
+    def __init__(self, table_name, columns=None, where=None):
         self.table_name = table_name
+        self.columns = columns  # None or list[str]
         self.where = where
+
 
 
 class Update(Statement):
@@ -34,7 +36,9 @@ class Delete(Statement):
         self.where = where
 
 class JoinSelect:
-    def __init__(self, table_name, join):
+    def __init__(self, table_name, columns, join):
         self.table_name = table_name
+        self.columns = columns
         self.join = join
         self.where = None
+
