@@ -8,6 +8,11 @@
 
   <button onclick="init()">Init DB</button>
   <button onclick="loadUsers()">Load Users</button>
+  <h3>Add User</h3>
+  <input id="uid" placeholder="id" />
+  <input id="uname" placeholder="name" />
+  <button onclick="addUser()">Add</button>
+
 
   <pre id="output"></pre>
 
@@ -23,6 +28,18 @@
       document.getElementById("output").textContent =
         JSON.stringify(data, null, 2);
     }
+    async function addUser() {
+     const id = document.getElementById("uid").value;
+     const name = document.getElementById("uname").value;
+
+    await fetch("/users", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({id: Number(id), name})
+  });
+
+      loadUsers();
+}
   </script>
 </body>
 </html>

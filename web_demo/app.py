@@ -25,8 +25,15 @@ def index():
 
 @app.route("/init", methods=["POST"])
 def init_db():
-    run_sql("CREATE TABLE users (id INT PRIMARY KEY, name TEXT);")
-    return jsonify({"status": "initialized"})
+    try:
+        run_sql("CREATE TABLE users (id INT PRIMARY KEY, name TEXT);")
+        return jsonify({"status": "initialized"})
+    except ValueError as e:
+        return jsonify({
+            "status": "already_initialized",
+            "message": str(e)
+        })
+
 
 
 @app.route("/users", methods=["GET"])
