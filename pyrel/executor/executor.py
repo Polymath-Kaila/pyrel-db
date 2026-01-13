@@ -23,7 +23,11 @@ class Executor:
     def execute(self, stmt):
         # -------------------------
         # AST EXECUTION
-     
+        if isinstance(stmt, Select):
+           raise RuntimeError(
+               "Select statements must be planned before execution"
+           )
+
         if isinstance(stmt, CreateTable):
             schema = Schema(stmt.columns)
             self.db.create_table(stmt.table_name, schema)
@@ -39,13 +43,6 @@ class Executor:
             )
             table.insert(row)
             return "OK"
-
-        if isinstance(stmt, Select):
-            table = self.db.get_table(stmt.table_name)
-            if stmt.where:
-                col, val = stmt.where
-                return table.select_where(equals(col, val))
-            return table.select_all()
 
         if isinstance(stmt, Update):
             table = self.db.get_table(stmt.table_name)

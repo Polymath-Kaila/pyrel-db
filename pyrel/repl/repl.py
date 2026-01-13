@@ -2,11 +2,14 @@
 from pyrel.parser.parser import parse
 from pyrel.executor.executor import Executor
 from pyrel.storage.database import Database
+from pyrel.planner.planner import Planner
+
 
 
 def start_repl():
     db = Database()
     executor = Executor(db)
+    planner = Planner(db)
 
     print("PyRelDB minimal relational database by polymath")
     print("Type 'exit' to quit\n")
@@ -18,7 +21,8 @@ def start_repl():
                 break
 
             stmt = parse(sql)
-            result = executor.execute(stmt)
+            plan = planner.plan(stmt)
+            result = executor.execute(plan)
 
             if result is not None:
                 print(result)
