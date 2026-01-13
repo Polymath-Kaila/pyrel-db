@@ -16,6 +16,10 @@ def parse(sql: str) -> Statement:
     if command == "INSERT":
         return _parse_insert(tokens, sql)
 
+    # JOIN MUST COME BEFORE SELECT
+    if command == "SELECT" and "JOIN" in tokens:
+        return _parse_join(tokens)
+
     if command == "SELECT":
         return _parse_select(tokens)
 
@@ -24,11 +28,9 @@ def parse(sql: str) -> Statement:
 
     if command == "DELETE":
         return _parse_delete(tokens)
-    
-    if command == "SELECT" and "JOIN" in tokens:
-       return _parse_join(tokens)
 
     raise ValueError("Unsupported SQL statement")
+
 
 def _parse_create(tokens, sql):
     table_name = tokens[2]
