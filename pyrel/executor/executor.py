@@ -1,4 +1,3 @@
-# pyrel/executor/executor.py
 
 from pyrel.executor.predicates import equals
 from pyrel.storage.schema import Schema
@@ -10,6 +9,11 @@ from pyrel.parser.ast import (
     Update,
     Delete,
 )
+from pyrel.planner.plan_nodes import (
+    TableScan,
+    IndexScan,
+    NestedLoopJoin,
+)
 
 
 class Executor:
@@ -17,6 +21,9 @@ class Executor:
         self.db = database
 
     def execute(self, stmt):
+        # -------------------------
+        # AST EXECUTION
+
         if isinstance(stmt, CreateTable):
             schema = Schema(stmt.columns)
             self.db.create_table(stmt.table_name, schema)
@@ -33,13 +40,6 @@ class Executor:
             table.insert(row)
             return "OK"
 
-        if isinstance(stmt, Select):
-            table = self.db.get_table(stmt.table_name)
-            if stmt.where:
-                col, val = stmt.where
-                return table.select_where(equals(col, val))
-            return table.select_all()
-
         if isinstance(stmt, Update):
             table = self.db.get_table(stmt.table_name)
             col, val = stmt.where
@@ -50,4 +50,37 @@ class Executor:
             col, val = stmt.where
             return table.delete_where(equals(col, val))
 
-        raise ValueError(f"Unsupported statement: {type(stmt).__name__}")
+        # -------------------------
+        # PLAN EXECUTION
+      
+        if isinstance(stmt, TableScan):
+            table = self.db.get_table(stmt.table_name)
+            return table.select_all()
+
+        if isinstance(stmt, IndexScan):
+            table = self.db.get_table(stmt.table_name)
+            return table.select_where(
+                equals(stmt.column, stmt.value)
+            )
+
+        if isinstance(stmt, NestedLoopJoin):
+            left_rows = self.execute(stmt.left)
+            right_rows = self.execute(stmt.right)
+
+            results = []
+            for l in left_rows:
+                for r in right_rows:
+                    if (
+                        l[stmt.left_key.split(".")[1]]
+                        == r[stmt.right_key.split(".")[1]]
+                    ):
+                        results.append({**l, **r})
+
+            return results
+
+        # -------------------------
+        # FALLBACK
+       
+        raise ValueError(
+            f"Unsupported statement: {type(stmt).__name__}"
+        )
