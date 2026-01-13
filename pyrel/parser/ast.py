@@ -33,7 +33,8 @@ class Delete(Statement):
         self.table_name = table_name
         self.where = where
 
-class JoinSelect(Select):
-    def __init__(self, table_name, join, where=None):
-        super().__init__(table_name, where)
+class JoinSelect:
+    def __init__(self, table_name, join):
+        self.table_name = table_name
         self.join = join
+        self.where = None

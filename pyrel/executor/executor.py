@@ -23,10 +23,6 @@ class Executor:
     def execute(self, stmt):
         # -------------------------
         # AST EXECUTION
-        if isinstance(stmt, Select):
-           raise RuntimeError(
-               "Select statements must be planned before execution"
-           )
 
         if isinstance(stmt, CreateTable):
             schema = Schema(stmt.columns)

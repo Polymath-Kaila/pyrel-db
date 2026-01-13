@@ -1,6 +1,7 @@
 
 from .ast import *
 from pyrel.storage.schema import Column
+from pyrel.parser.ast import JoinSelect
 
 
 def parse(sql: str) -> Statement:
@@ -96,7 +97,9 @@ def _parse_join(tokens):
     right_table = tokens[5]
 
     on_index = tokens.index("ON")
-    left_key, right_key = tokens[on_index + 1].split("=")
+    condition = tokens[on_index + 1]
+
+    left_key, right_key = condition.split("=")
 
     return JoinSelect(
         table_name=left_table,
