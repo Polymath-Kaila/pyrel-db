@@ -3,6 +3,13 @@
 from pyrel.executor.predicates import equals
 from pyrel.storage.schema import Schema
 from pyrel.storage.database import Database
+from pyrel.parser.ast import (
+    CreateTable,
+    Insert,
+    Select,
+    Update,
+    Delete,
+)
 
 
 class Executor:
@@ -10,8 +17,6 @@ class Executor:
         self.db = database
 
     def execute(self, stmt):
-        from pyrel.parser.ast import *
-
         if isinstance(stmt, CreateTable):
             schema = Schema(stmt.columns)
             self.db.create_table(stmt.table_name, schema)
@@ -19,10 +24,12 @@ class Executor:
 
         if isinstance(stmt, Insert):
             table = self.db.get_table(stmt.table_name)
-            row = dict(zip(
-                [c.name for c in table.schema.columns],
-                stmt.values
-            ))
+            row = dict(
+                zip(
+                    [c.name for c in table.schema.columns],
+                    stmt.values,
+                )
+            )
             table.insert(row)
             return "OK"
 
@@ -43,4 +50,4 @@ class Executor:
             col, val = stmt.where
             return table.delete_where(equals(col, val))
 
-        raise ValueError("Unknown statement")
+        raise ValueError(f"Unsupported statement: {type(stmt).__name__}")
