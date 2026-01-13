@@ -66,17 +66,31 @@ class Executor:
         if isinstance(stmt, NestedLoopJoin):
             left_rows = self.execute(stmt.left)
             right_rows = self.execute(stmt.right)
+            
+            left_table = stmt.left.table_name
+            right_table = stmt.right.table_name
 
-            results = []
-            for l in left_rows:
-                for r in right_rows:
-                    if (
-                        l[stmt.left_key.split(".")[1]]
-                        == r[stmt.right_key.split(".")[1]]
-                    ):
-                        results.append({**l, **r})
+        results = []
 
-            return results
+        for l in left_rows:
+            for r in right_rows:
+                if (
+                   l[stmt.left_key.split(".")[1]]
+                   == r[stmt.right_key.split(".")[1]]
+                ):
+                   row = {}
+
+                # Namespace left table columns
+                   for k, v in l.items():
+                       row[f"{left_table}.{k}"] = v
+
+                # Namespace right table columns
+                   for k, v in r.items():
+                       row[f"{right_table}.{k}"] = v
+
+                   results.append(row)
+
+        return results
 
         # -------------------------
         # FALLBACK
