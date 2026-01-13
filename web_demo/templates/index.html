@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PyRelDB Demo</title>
+</head>
+<body>
+  <h1>PyRelDB Web Demo</h1>
+
+  <button onclick="init()">Init DB</button>
+  <button onclick="loadUsers()">Load Users</button>
+
+  <pre id="output"></pre>
+
+  <script>
+    async function init() {
+      await fetch("/init", { method: "POST" });
+      alert("DB initialized");
+    }
+
+    async function loadUsers() {
+      const res = await fetch("/users");
+      const data = await res.json();
+      document.getElementById("output").textContent =
+        JSON.stringify(data, null, 2);
+    }
+  </script>
+</body>
+</html>
