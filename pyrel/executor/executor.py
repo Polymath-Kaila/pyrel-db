@@ -53,17 +53,23 @@ class Executor:
                 )
             )
             table.insert(row)
+            self.db.save()
             return "OK"
 
         if isinstance(stmt, Update):
             table = self.db.get_table(stmt.table_name)
             col, val = stmt.where
-            return table.update_where(equals(col, val), stmt.updates)
+            count = table.update_where(equals(col, val), stmt.updates)
+            self.db.save()
+            return count
+
 
         if isinstance(stmt, Delete):
             table = self.db.get_table(stmt.table_name)
             col, val = stmt.where
-            return table.delete_where(equals(col, val))
+            count = table.delete_where(equals(col, val))
+            self.db.save()
+            return count
 
         # -------------------------
         # PLAN EXECUTION

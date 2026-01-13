@@ -11,6 +11,15 @@ db = Database()
 executor = Executor(db)
 planner = Planner(db)
 
+try:
+    executor.execute(
+        planner.plan(
+            parse("CREATE TABLE users (id INT PRIMARY KEY, name TEXT);")
+        )
+    )
+except ValueError:
+    # Table already exists → OK
+    pass
 
 def run_sql(sql: str):
     stmt = parse(sql)

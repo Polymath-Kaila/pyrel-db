@@ -1,0 +1,22 @@
+{
+  "users": {
+    "schema": [
+      {
+        "name": "id",
+        "type": "int",
+        "primary_key": true
+      },
+      {
+        "name": "name",
+        "type": "str",
+        "primary_key": false
+      }
+    ],
+    "rows": [
+      {
+        "id": 2,
+        "name": "james"
+      }
+    ]
+  }
+}
