@@ -8,7 +8,7 @@ def start_repl():
     db = Database()
     executor = Executor(db)
 
-    print("PyRelDB — minimal relational database")
+    print("PyRelDB minimal relational database by polymath")
     print("Type 'exit' to quit\n")
 
     while True:
