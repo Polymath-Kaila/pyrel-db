@@ -23,6 +23,9 @@ def parse(sql: str) -> Statement:
 
     if command == "DELETE":
         return _parse_delete(tokens)
+    
+    if command == "SELECT" and "JOIN" in tokens:
+       return _parse_join(tokens)
 
     raise ValueError("Unsupported SQL statement")
 
@@ -87,3 +90,19 @@ def _parse_delete(tokens):
     table_name = tokens[2]
     where = _parse_where(tokens)
     return Delete(table_name, where)
+
+def _parse_join(tokens):
+    left_table = tokens[3]
+    right_table = tokens[5]
+
+    on_index = tokens.index("ON")
+    left_key, right_key = tokens[on_index + 1].split("=")
+
+    return JoinSelect(
+        table_name=left_table,
+        join={
+            "table": right_table,
+            "left_key": left_key,
+            "right_key": right_key,
+        },
+    )
