@@ -19,9 +19,8 @@ class Executor:
     def __init__(self, database: Database):
         self.db = database
 
-    # -------------------------
+
     # PROJECTION
-    # -------------------------
     def _apply_projection(self, rows, columns):
         if columns is None:
             return rows
@@ -32,13 +31,10 @@ class Executor:
 
         return projected
 
-    # -------------------------
     # EXECUTION
-    # -------------------------
     def execute(self, stmt):
-        # -------------------------
+   
         # AST EXECUTION
-        # -------------------------
         if isinstance(stmt, CreateTable):
             schema = Schema(stmt.columns)
             self.db.create_table(stmt.table_name, schema)
@@ -65,9 +61,7 @@ class Executor:
             col, val = stmt.where
             return table.delete_where(equals(col, val))
 
-        # -------------------------
         # PLAN EXECUTION
-        # -------------------------
         if isinstance(stmt, TableScan):
             table = self.db.get_table(stmt.table_name)
             rows = table.select_all()
@@ -111,9 +105,7 @@ class Executor:
                 results, getattr(stmt, "columns", None)
             )
 
-        # -------------------------
         # FALLBACK
-        # -------------------------
         raise ValueError(
             f"Unsupported statement: {type(stmt).__name__}"
         )
