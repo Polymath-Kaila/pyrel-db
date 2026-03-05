@@ -32,7 +32,6 @@ class Table:
                     unique=True
                 )
 
-    # -------------------------
     # INSERT
     
     def insert(self, row: dict):
@@ -50,7 +49,6 @@ class Table:
 
         self.rows.append(row)
 
-    # -------------------------
     # SELECT
    
     def select_all(self):
@@ -79,7 +77,6 @@ class Table:
         # Full table scan fallback
         return [row for row in self.rows if predicate.evaluate(row)]
 
-    # -------------------------
     # UPDATE
    
     def update_where(self, predicate, updates: dict) -> int:
@@ -112,7 +109,6 @@ class Table:
 
         return updated
 
-    # -------------------------
     # DELETE
     
     def delete_where(self, predicate) -> int:
